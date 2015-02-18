@@ -1,50 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 09 16:05:44 2015
-
-@author: Wimma
-"""
-
 from __future__ import division
 from numpy import linspace
 from scipy.integrate import odeint
 from matplotlib import pyplot as plot
+from parameters import get_constants, get_initial
 
-"Declare the constants and initial conditions"
-
-# constants
-k1 = 1.842192
-k2 = 26.639385
-k3 = 2.828542
-k4 = 0.953015
-k5 = 0.009999
-k6 = 26.821861
-k7 = 0.638429
-k8 = 1.934807
-k9 = 4.255633
-k10 = 5.969177
-k11 = 2.784037
-k12 = 1.000000
-Area = 1.000000
-
-# initial conditions
-HCl_0 = 0
-LDH_0 = 0.3
-Poly_active_0 = 5
-Radical_0 = 0
-Prim_stab_0 = 1.3
-Poly_deg_0 = 0
-Cross_link_0 = 0
-
-# save in a single list
-initial = [HCl_0, LDH_0, Poly_active_0, Radical_0, Prim_stab_0,
-           Poly_deg_0, Cross_link_0]
-
-"Set up differential model"
+# set up differential model for the metrastat
 
 
-def metrostat(Variables, Time):
-
+def metrastat(variables, time, k12_vary=0):
+    # constants
+    k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12 = get_constants()
+    if k12_vary > 0:
+        k12 = k12_vary
     """
     Name convention:
     HCl             Concentration of HCl gas in PVC
@@ -57,8 +24,8 @@ def metrostat(Variables, Time):
     Cross_link      Concentration of cross-links between polymer chains
     """
 
-    HCl, LDH, Poly_active, Radical, Prim_stab, Poly_deg, Cross_link = Variables
-    dHCl = -10*k3*HCl*LDH + k4*HCl*Poly_active + k5*Poly_active - k12*Area*HCl
+    HCl, LDH, Poly_active, Radical, Prim_stab, Poly_deg, Cross_link = variables
+    dHCl = -10*k3*HCl*LDH + k4*HCl*Poly_active + k5*Poly_active - k12*HCl
     dLDH = -k3*HCl*LDH
     dPoly_active = -k4*HCl*Poly_active - k5*Poly_active
     dRadical = k4*HCl*Poly_active + k5*Poly_active - k6*Radical*Prim_stab \
@@ -75,10 +42,11 @@ def metrostat(Variables, Time):
             dPoly_deg,
             dCross_link]
 
-"Simulate the Metrastat"
+# simulate the metrastat and plot the concentration profiles of each specie
 
-Timespan = linspace(0, 120, 120)
-Simulation = odeint(metrostat, initial, Timespan)
+timespan = linspace(0, 120, 120)
+initial = get_initial()
+simulation = odeint(metrastat, initial, timespan)
 legendstr = ['HCl',
              'LDH',
              'Polymer active sites',
@@ -87,19 +55,8 @@ legendstr = ['HCl',
              'Degraded polymer',
              'Cross-links']
 
-plot.plot(Timespan, Simulation)
+plot.plot(timespan, simulation)
 plot.title('Specie concentrations')
 plot.xlabel('Time /min')
 plot.ylabel('Concentration')
 plot.legend(legendstr)
-plot.close()
-
-"Generate graphs seperately"
-
-for i in range(7):
-    plot.figure(i)
-    plot.plot(Timespan, Simulation[:, i])
-    plot.title(legendstr[i] + ' concentration')
-    plot.xlabel('Time /min')
-    plot.ylabel('Concentration')
-    plot.savefig(legendstr[i] + '.pdf')
