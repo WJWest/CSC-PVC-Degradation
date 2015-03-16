@@ -1,3 +1,5 @@
+# get the reaction constants and initial concentrations used in the metrastat ODE
+
 import json
 
 
@@ -5,18 +7,12 @@ def get_constants():
     with open('cons.json') as f:
         cons = json.load(f)
 
-    return [cons['k1'],
-            cons['k2'],
-            cons['k3'],
+    return [cons['k3'],
             cons['k4'],
             cons['k5'],
             cons['k6'],
             cons['k7'],
-            cons['k8'],
-            cons['k9'],
-            cons['k10'],
-            cons['k11'],
-            cons['k12']]
+            cons['k8']]
 
 
 def get_initial():
