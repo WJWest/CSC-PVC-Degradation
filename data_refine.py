@@ -18,7 +18,7 @@ def get_csv(extension):
 
 
 # remove faulty data after max YI
-def refine_YI(raw_data): 
+def refine_YI(raw_data):
     " raw_data must be a pandas dataframe "
 
     # find maximum YI in experimental data
@@ -26,11 +26,11 @@ def refine_YI(raw_data):
 
     # get time index where maximum YI occurs
     max_Index = raw_data[max_YI].index
-    
+
     # slice the data after maximum YI
     trunc = raw_data.index > max_Index
 
     # update faulty data to remain at the maximum YI
     raw_data['YI'][trunc] = raw_data.YI.max()
 
-    return raw_data['YI']    
+    return raw_data['YI']
