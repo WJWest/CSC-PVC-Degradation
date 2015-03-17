@@ -13,7 +13,7 @@ datadir = os.path.expanduser(config['datadir'])
 
 # extract all file names
 def get_csv(extension):
-    datadir_extended = datadir + extension
+    datadir_extended = os.path.join(datadir, extension)
     return glob.glob(os.path.join(datadir_extended, '*.csv'))
 
 
