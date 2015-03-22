@@ -6,10 +6,11 @@ from Metrastat import metrastat
 from numpy import array, dot
 from scipy.integrate import odeint
 from lmfit import minimize, Parameters
+from directories import set_filename
 
 
-def fit_experimental(time, YI, initial, x0):
-    from lmfit import report_fit
+def fit_experimental(time, YI, initial, x0, iteration, constants):
+    from lmfit import fit_report
 
     def obj_func(params, time, YI):
         # unpack parameters to be fitted
@@ -19,7 +20,8 @@ def fit_experimental(time, YI, initial, x0):
         constant_vector = array((v['a'], v['b'], v['c'], v['d'], v['e'],
                                  v['f'], v['g']), dtype=float)
 
-        concentrations = odeint(metrastat, initial, time, args=(v['k12'],))
+        concentrations = odeint(metrastat, initial, time,
+                                args=(v['k12'], constants))
         conc_mat = array(concentrations)
 
         return dot(conc_mat, constant_vector) - array(YI, dtype=float)
@@ -27,7 +29,7 @@ def fit_experimental(time, YI, initial, x0):
     # set initial parameter values
     params = Parameters()
 
-    #          (Name,   Value,  Vary,   Min,    Max,    Expr)
+    #               (Name,   Value,  Vary,   Min,    Max,    Expr)
     params.add_many(('a',    x0[0],  True,   None,   None,   None),
                     ('b',    x0[1],  True,   None,   None,   None),
                     ('c',    x0[2],  True,   None,   None,   None),
@@ -39,6 +41,40 @@ def fit_experimental(time, YI, initial, x0):
 
     # do fit with leastsq model
     result = minimize(obj_func, params, args=(time, YI))
-    print report_fit(params)
 
-    return array(YI, dtype=float) + result.residual
+    # calculate weighted error
+    error = sum(result.residual**2)
+    npoints = len(time)
+    weighted = error/npoints
+    print "error = " + str(weighted)
+
+    # generate the fitting report
+    fname = set_filename('Fitting results/') + 'Fit' + \
+        str(iteration) + ' report.txt'
+
+    report = open(fname, "w")
+    report.write('Fitting report\n\n')
+
+    # unpack reaction constants
+    k3, k4, k5, k6, k7, k8 = constants
+    report.write('Rate constants used:\n')
+
+    for i, k in enumerate(constants):
+        report.write('k' + str(i+3) + '\t' + str(k) + '\n')
+
+    report.write('\nFitted parameters:\n')
+    fit_results = params.valuesdict()
+
+    for fit_param in fit_results:
+        report.write(fit_param + '\t' + str(fit_results[fit_param]) + '\n')
+
+    report.write('\nWeighted error:')
+    report.write('\n' + str(weighted) + '\n')
+
+    report.write('\nAdditional comments:\n')
+    report.write(fit_report(params))
+    report.close()
+
+    return [array(YI, dtype=float) + result.residual,
+            fit_results,
+            weighted]

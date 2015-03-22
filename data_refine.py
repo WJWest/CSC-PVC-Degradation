@@ -1,20 +1,15 @@
 # procedure to take raw experimental data with errors and refine it
 
-import json
+from directories import set_filename
+
 import glob
 import os
-
-# read configuration file and expand ~ to user directory
-with open('config.json') as f:
-    config = json.load(f)
-
-datadir = os.path.expanduser(config['datadir'])
 
 
 # extract all file names
 def get_csv(extension):
-    datadir_extended = datadir + extension
-    return glob.glob(os.path.join(datadir_extended, '*.csv'))
+    fname = set_filename(extension)
+    return glob.glob(os.path.join(fname, '*.csv'))
 
 
 # remove faulty data after max YI

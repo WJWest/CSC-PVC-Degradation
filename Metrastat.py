@@ -1,10 +1,9 @@
 # set up differential model for the metrastat
 
 
-def metrastat(variables, time, k12):
-    from parameters import get_constants
-    # constants
-    k3, k4, k5, k6, k7, k8 = get_constants()
+def metrastat(variables, time, k12, constants):
+    # unpack rate constants
+    k3, k4, k5, k6, k7, k8 = constants
 
     """
     Name convention:
