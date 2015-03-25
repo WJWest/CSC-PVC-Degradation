@@ -29,3 +29,20 @@ def refine_YI(raw_data):
     raw_data['YI'][trunc] = raw_data.YI.max()
 
     return raw_data['YI']
+
+
+# remove faulty data after max YI
+def refine_max(raw_data):
+    " raw_data must be a pandas dataframe "
+
+    # find maximum YI in experimental data
+    max_YI = raw_data.YI == raw_data.YI.max()
+
+    # get time index where maximum YI occurs
+    max_Index = raw_data[max_YI].index
+
+    # slice the data after maximum YI
+    trunc = raw_data.index < max_Index
+
+    return [raw_data[trunc].index,
+            raw_data[trunc]['YI']]
