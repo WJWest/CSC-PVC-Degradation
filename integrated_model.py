@@ -1,67 +1,83 @@
 from __future__ import division
-from data_refine import get_csv, refine_YI
+from data_refine import get_file_names, refine_max
 from parameters import get_initial, get_constants
 from fitting_YI import fit_experimental
 from numpy import array
-from matplotlib import pyplot as plot
+from matplotlib import pyplot as plt
 from Metrastat import metrastat
 from numpy.linalg import lstsq
 from scipy.integrate import odeint
 from time import time
 from directories import set_filename
+from matplotlib.backends.backend_pdf import PdfPages
 
 import pandas
 
 # get file names from experimental database
-exp_data = get_csv('Harry Data/')
+exp_data = get_file_names('Wimpie Data/Rheomix Results/')
 
 # save the least-squares solution after every fit
 soln = []
 
+# get initial values for ODE's
+all_initial = get_initial('Reinhard Fit/')
+
+# get constants as determined by Fechter's fit
+all_constants = get_constants('Reinhard Fit/')
+
 # loop through experimental data files
 start = time()
-for i, data in enumerate(exp_data):
-    print 'Busy with fit: %d' % (i)
 
-    sample = pandas.read_csv(data, index_col='Time')
-    sample = sample.dropna()
+with PdfPages('individual_fits.pdf') as pdf:
 
-    # refine data to remove faulty data points
-    new_YI = refine_YI(sample)
+    for i, data in enumerate(exp_data):
+        print 'Busy with fit: %d' % (i)
 
-    # get initial values for ODE's
-    initial = get_initial('Reinhard Fit/', i)
+        sample = pandas.read_csv(data, index_col='Time')
+        sample = sample.dropna()
 
-    # get constants
-    constants = get_constants('Reinhard Fit/', i)
-    ldh = get_constants('Reinhard Fit/', i, True)
+        # refine data to remove faulty data points
+        new_time, new_YI = refine_max(sample)
 
-    # assume k12 = 0.8 to get initial guesses
-    concentration = odeint(metrastat, initial, sample.index,
-                           args=(0.8, constants,))
-    conc_mat = array(concentration)
-    guess = lstsq(conc_mat, sample.YI)[0]
-    x0 = list(guess)
-    x0.append(0.8)
+        # get initial values
+        initial = all_initial[i]
+        ldh = initial[1]
 
-    # do a least-squares fit
-    fit, params, error = fit_experimental(sample.index, sample.YI,
-                                          initial, x0, i, constants)
+        # get constants
+        constants = all_constants[i]
 
-    # update solution list
-    param_dict = pandas.Series(params)
-    add_dict = pandas.Series({"error": error,
-                              "LDH": ldh})
-    final_dict = param_dict.append(add_dict)
-    soln.append(final_dict)
+        # assume k12 = 0.8 to get initial guesses
+        concentration = odeint(metrastat, initial, sample.index,
+                               args=(0.8, constants,))
+        conc_mat = array(concentration)
+        guess = lstsq(conc_mat, sample.YI)[0]
+        x0 = list(guess)
+        x0.append(0.8)
 
-    # plot the least-squares fit
-    plot.figure(i)
-    plot.plot(sample.index, sample.YI,
-              sample.index, fit)
-    fname = set_filename('Fitting results/') + 'Fit' + str(i) + '.jpg'
-    plot.savefig(fname)
-    plot.close()
+        # do a least-squares fit
+        fit, params, error = fit_experimental(new_time, new_YI,
+                                              initial, x0, i, constants)
+
+        # update solution list
+        param_dict = pandas.Series(params)
+        add_dict = pandas.Series({"error": error,
+                                  "LDH": ldh})
+        final_dict = param_dict.append(add_dict)
+        soln.append(final_dict)
+
+        # plot YI using the result of the least-squares fit
+        fig = plt.figure()
+        path, fname = data.rsplit('/', 1)
+        sample_name, ftype = fname.split('.')
+
+        plt.title('Fit for sample ' + sample_name)
+        plt.xlabel('Time /s')
+        plt.ylabel('YI')
+        plt.plot(new_time, new_YI,
+                 new_time, fit)
+        plt.legend(['Experimental', 'Fit'], loc=0)
+        pdf.savefig()
+        plt.close()
 
 stop = time()
 print 'Elapsed time = %f' % (stop - start)
