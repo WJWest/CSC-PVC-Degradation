@@ -86,5 +86,4 @@ with PdfPages('fitting_results.pdf') as pdf:
                  time_to_fit[i], fit)
         plt.legend(['Experimental', 'Fit'], loc=0)
         pdf.savefig()
-
-    pdf.close()
+        plt.close()
