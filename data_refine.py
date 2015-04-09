@@ -4,12 +4,30 @@ from directories import set_filename
 
 import glob
 import os
+import pandas
 
 
 # extract all file names
 def get_csv(extension):
+    # access database with names of available results
     fname = set_filename(extension)
-    return glob.glob(os.path.join(fname, '*.csv'))
+    directory = glob.glob(os.path.join(fname, '*.csv'))
+
+    return directory
+
+
+def get_file_names(extension):
+    directory = get_csv(extension)
+    results = pandas.read_csv(directory[0]).dropna(subset=['Date'])
+
+    # generate list with file names of available results
+    files = []
+    results['Sample'] = results['Sample'] + '.csv'
+
+    for file_name in results['Sample']:
+        files.append(set_filename('Wimpie Data/Metrastat Results/' + file_name))
+
+    return files
 
 
 # remove faulty data after max YI

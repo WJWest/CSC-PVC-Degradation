@@ -24,6 +24,7 @@ for i, data in enumerate(exp_data):
     print 'Busy with fit: %d' % (i)
 
     sample = pandas.read_csv(data, index_col='Time')
+    sample = sample.dropna()
 
     # refine data to remove faulty data points
     new_YI = refine_YI(sample)
