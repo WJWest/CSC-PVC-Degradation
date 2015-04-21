@@ -1,7 +1,7 @@
 from __future__ import division
-from data_refine import get_file_names, refine_max
+from data_refine import get_file_names, refine_YI
 from parameters import get_initial, get_constants
-from fitting_YI import fit_experimental
+from fitting_YI_all_models import fit_experimental
 from numpy import array
 from matplotlib import pyplot as plt
 from Metrastat import metrastat
@@ -14,7 +14,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pandas
 
 # get file names from experimental database
-exp_data = get_file_names('Wimpie Data/Rheomix Results/')
+exp_data = get_file_names('Wimpie Data/Rheomix Results/', Ca_Only=False)
 
 # save the least-squares solution after every fit
 soln = []
@@ -28,7 +28,7 @@ all_constants = get_constants('Reinhard Fit/')
 # loop through experimental data files
 start = time()
 
-with PdfPages('individual_fits.pdf') as pdf:
+with PdfPages('quadratic.pdf') as pdf:
 
     for i, data in enumerate(exp_data):
         print 'Busy with fit: %d' % (i)
@@ -37,7 +37,7 @@ with PdfPages('individual_fits.pdf') as pdf:
         sample = sample.dropna()
 
         # refine data to remove faulty data points
-        new_time, new_YI = refine_max(sample)
+        new_YI = refine_YI(sample)
 
         # get initial values
         initial = all_initial[i]
@@ -55,7 +55,7 @@ with PdfPages('individual_fits.pdf') as pdf:
         x0.append(0.8)
 
         # do a least-squares fit
-        fit, params, error = fit_experimental(new_time, new_YI,
+        fit, params, error = fit_experimental(sample.index, new_YI,
                                               initial, x0, i, constants)
 
         # update solution list
@@ -73,8 +73,8 @@ with PdfPages('individual_fits.pdf') as pdf:
         plt.title('Fit for sample ' + sample_name)
         plt.xlabel('Time /s')
         plt.ylabel('YI')
-        plt.plot(new_time, new_YI,
-                 new_time, fit)
+        plt.plot(sample.index, new_YI,
+                 sample.index, fit)
         plt.legend(['Experimental', 'Fit'], loc=0)
         pdf.savefig()
         plt.close()
