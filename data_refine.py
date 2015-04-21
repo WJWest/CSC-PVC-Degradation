@@ -16,16 +16,31 @@ def get_csv(extension):
     return directory
 
 
-def get_file_names(extension):
-    directory = get_csv(extension)
-    results = pandas.read_csv(directory[0]).dropna(subset=['Date'])
+def get_xlsx(extension):
+    fname = set_filename(extension)
+    directory = glob.glob(os.path.join(fname, '*.xlsx'))
+
+    return directory
+
+
+def get_file_names(extension, Ca_Only=False):
+    directory = get_xlsx(extension)
+    results = pandas.read_excel(directory[0], 0, index_col='Date')
+    results = results.dropna(subset=['Time'])
 
     # generate list with file names of available results
     files = []
     results['Sample'] = results['Sample'] + '.csv'
 
-    for file_name in results['Sample']:
-        files.append(set_filename('Wimpie Data/Metrastat Results/' + file_name))
+    if not(Ca_Only):
+        for file_name in results['Sample']:
+            files.append(set_filename('Wimpie Data/Metrastat Results/'
+                                      + file_name))
+    else:
+        for file_name in results['Sample']:
+            if file_name[0:2] == 'Ca':
+                files.append(set_filename('Wimpie Data/Metrastat Results/'
+                                          + file_name))
 
     return files
 
