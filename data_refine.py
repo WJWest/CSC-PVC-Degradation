@@ -37,12 +37,12 @@ def get_file_names(extension, Ca_Only=False):
 
     if not(Ca_Only):
         for file_name in results['Sample']:
-            files.append(set_filename('Wimpie Data/Metrastat Results/'
+            files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/'
                                       + file_name))
     else:
         for file_name in results['Sample']:
             if file_name[0:2] == 'Ca':
-                files.append(set_filename('Wimpie Data/Metrastat Results/'
+                files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/'
                                           + file_name))
 
     return files
@@ -57,6 +57,7 @@ def refine_YI(raw_data, extended=False):
 
     # get time index where maximum YI occurs
     max_Index = raw_data[max_YI].index
+    max_Index = max_Index[0]
 
     if extended:
         # slice the data after maximum YI
