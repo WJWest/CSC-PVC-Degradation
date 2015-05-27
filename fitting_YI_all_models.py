@@ -13,6 +13,10 @@ from objective import one_row
 
 
 def fit_experimental(time, YI, initial, constants, one_set_params=False):
+    # print the time each time a smaller error has been found
+    if one_set_params:
+        from time import time as tm
+        start = tm()
 
     min_error = 10e10
     power_list = all_powers(4, 2, 4)
@@ -127,6 +131,12 @@ def fit_experimental(time, YI, initial, constants, one_set_params=False):
             best_params = params.valuesdict()
             best_quadratic = powers
             print 'error: %f' % weighted
+            try:
+                elapsed = (tm() - start)/60
+                print "elapsed time = %f min" % elapsed
+                remain = elapsed/(iteration + 1)*(nr_comb - iteration - 1)
+                print "time remaining = %f min" % remain
+            except:
+                pass
 
-#    return [array(YI, dtype=float) + min_residual,
     return [best_quadratic, best_params, min_error]
