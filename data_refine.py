@@ -26,7 +26,7 @@ def get_xlsx(extension):
 
 
 # generate the file names of all the metrastat data
-def get_file_names(extension, Ca_Only=False):
+def get_file_names(extension, sample='All'):
     directory = get_xlsx(extension)
     results = pandas.read_excel(directory[0], 0, index_col='Date')
     results = results.dropna(subset=['Time'])
@@ -35,15 +35,19 @@ def get_file_names(extension, Ca_Only=False):
     files = []
     results['Sample'] = results['Sample'] + '.csv'
 
-    if not(Ca_Only):
+    if sample.upper() == 'ALL':
         for file_name in results['Sample']:
-            files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/'
-                                      + file_name))
+            files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/' + file_name))
+
+    elif sample.upper() == 'CA':
+        for file_name in results['Sample']:
+            if (file_name[0:2] == 'Ca') or (file_name[0:1] == 'N'):
+                files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/' + file_name))
+
     else:
         for file_name in results['Sample']:
-            if file_name[0:2] == 'Ca':
-                files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/'
-                                          + file_name))
+            if file_name[0:2] == 'Mg' or (file_name[0:1] == 'N'):
+                files.append(set_filename('Wimpie Data/Metrastat Results/Unfiltered/' + file_name))
 
     return files
 
